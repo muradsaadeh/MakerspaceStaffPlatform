@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Makerspace Staff Schedule</title>
+<style>
+:root{
+  --navy:#1C2333;--navy2:#2d3a55;--bg:#F5F6F8;--card:#fff;
+  --border:#E0E2E8;--text:#1C2333;--muted:#6B7280;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--navy);color:#fff;padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+header h1{font-size:1rem;font-weight:600}
+header p{font-size:.75rem;color:#9AABB8;margin-top:1px}
+.hbadge{background:#3A9EDC;color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.back-btn{font-size:.78rem;color:#9AABB8;text-decoration:none;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.15)}
+.back-btn:hover{background:rgba(255,255,255,.1)}
+nav{background:var(--navy2);display:flex;overflow-x:auto}
+.nav-btn{padding:.65rem 1.25rem;color:#CBD5E0;font-size:.85rem;cursor:pointer;border:none;background:transparent;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;font-family:inherit}
+.nav-btn.active{color:#fff;border-bottom-color:#3A9EDC}
+.nav-btn:hover{color:#fff}
+.info-bar{padding:.5rem 1.5rem;font-size:.78rem;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border)}
+.info-bar.loading{background:#FEF9EE;color:#92400E}
+.info-bar.live{background:#F0FDF4;color:#166534}
+.info-bar.err{background:#FFF5F5;color:#991B1B}
+main{padding:1.25rem}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.25rem;overflow:hidden}
+.card-head{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-head h2{font-size:.95rem;font-weight:600}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{padding:7px 9px;border:1px solid var(--border);white-space:nowrap}
+th{background:var(--navy);color:#fff;font-weight:500;text-align:center}
+th.name-hd{text-align:left}
+td.name-cell{font-weight:600;color:var(--navy);position:sticky;left:0;background:#fff;z-index:5;min-width:140px}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.73rem;font-weight:600}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.25rem}
+.emp-card{border:2px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;cursor:pointer;transition:all .15s;background:#fff}
+.emp-card:hover{border-color:#93C5FD;background:#F0F7FF}
+.emp-card.active{border-color:var(--navy);background:#EEF2FF}
+.emp-init{width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;margin-bottom:6px}
+.emp-label{font-size:.8rem;font-weight:600;color:var(--navy);line-height:1.3}
+.period-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.period-bar label{font-size:.82rem;color:var(--muted)}
+.period-bar select{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;font-family:inherit}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.leg{display:flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+.cal-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem}
+.cal-hdr{background:var(--navy);color:#fff;padding:.875rem 1.25rem}
+.cal-title{font-size:.95rem;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border)}
+.cal-dow{background:var(--navy2);color:#CBD5E0;text-align:center;font-size:.7rem;font-weight:600;padding:6px 2px}
+.cal-day{background:#fff;min-height:72px;padding:5px;display:flex;flex-direction:column;gap:3px}
+.cal-day.empty{background:#FAFAFA}
+.cal-day.outrange{background:#F8F8F8;opacity:.45}
+.cal-day.is-today{background:#EFF6FF}
+.cal-num{font-size:.7rem;font-weight:700;color:#6B7280}
+.cal-day.is-today .cal-num{color:var(--navy);background:#DBEAFE;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+.cal-chip{font-size:.65rem;font-weight:700;padding:2px 5px;border-radius:4px;text-align:center;line-height:1.3}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:1.25rem}
+.stat{border-radius:var(--radius);padding:.75rem;text-align:center;border:1px solid transparent}
+.no-data{text-align:center;padding:3rem;color:var(--muted);font-size:.9rem}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-btn .cnt{background:#DC2626;color:#fff;border-radius:10px;font-size:.65rem;padding:1px 6px;margin-left:4px;font-weight:700}
+.nav-btn.senior-only,.nav-btn.hide{display:none}
+body.is-senior .nav-btn.senior-only{display:inline-block}
+@media(max-width:600px){header{padding:.7rem 1rem}header p{display:none}main{padding:.9rem}.nav-btn{padding:.6rem .8rem;font-size:.8rem}}
+</style>
+<link rel="stylesheet" href="ops.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>&#128295; The Makerspace</h1>
+    <p><span class="live-dot"></span>Live &middot; <span id="who-line">…</span></p>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="hbadge" id="role-badge">Staff</span>
+    <a href="admin.html" class="back-btn" id="admin-link" style="display:none">&#9881;&#65039; Admin</a>
+    <a href="#" class="back-btn" onclick="logout();return false">Sign out</a>
+  </div>
+</header>
+<div class="info-bar loading" id="info-bar">&#9203; Connecting to live schedule...</div>
+<nav>
+  <button class="nav-btn active" onclick="showTab('myday',this)">&#127968; My Day</button>
+  <button class="nav-btn" onclick="showTab('maint',this)">&#128295; Maintenance</button>
+  <button class="nav-btn" onclick="showTab('issues',this)">&#9888;&#65039; Issues<span class="cnt" id="cnt-issues" style="display:none"></span></button>
+  <button class="nav-btn" onclick="showTab('calendar',this)">&#128197; Calendar</button>
+  <button class="nav-btn senior-only" onclick="showTab('signoff',this)">&#9989; Sign-off<span class="cnt" id="cnt-signoff" style="display:none"></span></button>
+  <button class="nav-btn senior-only" onclick="showTab('logs',this)">&#128203; Logs</button>
+  <button class="nav-btn senior-only" onclick="showTab('machines',this)">&#127981; Machines</button>
+  <button class="nav-btn" onclick="showTab('full',this)">&#128467;&#65039; Full Schedule</button>
+  <button class="nav-btn" onclick="showTab('personal',this)">&#128100; My Schedule</button>
+  <button class="nav-btn" onclick="showTab('location',this)">&#128205; Location View</button>
+</nav>
+<main>
+  <div id="tab-myday" class="section active ops-tab"></div>
+  <div id="tab-maint" class="section ops-tab"></div>
+  <div id="tab-issues" class="section ops-tab"></div>
+  <div id="tab-calendar" class="section ops-tab"></div>
+  <div id="tab-signoff" class="section ops-tab"></div>
+  <div id="tab-logs" class="section ops-tab"></div>
+  <div id="tab-machines" class="section ops-tab"></div>
+  <div id="tab-full" class="section">
+    <div class="period-bar">
+      <label>Period:</label>
+      <select id="full-psel" onchange="renderFull()"></select>
+    </div>
+    <div class="legend" id="full-legend"></div>
+    <div class="card"><div class="card-body" style="padding:0"><div class="tbl-wrap" id="full-tbl"><div class="no-data">Connecting...</div></div></div></div>
+  </div>
+  <div id="tab-personal" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem">
+      <h2 style="font-size:.95rem;font-weight:600">Select an employee</h2>
+      <div class="period-bar" style="margin:0"><label>Period:</label><select id="pers-psel" onchange="renderPersonal()"></select></div>
+    </div>
+    <div class="emp-grid" id="emp-picker"></div>
+    <div id="personal-content"></div>
+  </div>
+  <div id="tab-location" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1rem">
+      <h2 style="font-size:.95rem;font-weight:600">Select a location</h2>
+      <div class="period-bar" style="margin:0"><label>Period:</label><select id="loc-psel" onchange="renderLocation()"></select></div>
+    </div>
+    <div class="emp-grid" id="loc-picker"></div>
+    <div id="location-content"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="module">
+import { gate, logout, db, ref, onValue, ROLES, esc } from './common.js';
+import { startOps, RENDER, S as OPS } from './ops.js';
+window.logout = logout;
+const schedRef = ref(db, 'rotation');
+let ME = null;
+
+const LOC_STYLE={
+  "KHBP":        {bg:"#D6E8F7",fg:"#0D3F6E"},
+  "AYC Morning": {bg:"#D5F0E5",fg:"#084D37"},
+  "AYC Night":   {bg:"#E9E5FC",fg:"#31216B"},
+  "Mobile Lab":  {bg:"#FDEECE",fg:"#6B3E00"},
+  "Outreach":    {bg:"#FDE0EB",fg:"#6B162F"},
+  "Aqaba":       {bg:"#CFF4F4",fg:"#055160"},
+  "Day Off":     {bg:"#F0F0EE",fg:"#888"},
+};
+const DAY_ABBR=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let state=null; let selEmp=0;
+// Backward compat: employees may be strings OR {name,email} objects
+function empName(emp){ return typeof emp === 'string' ? emp : (emp?.name || ''); }
+function getNote(date, ei){ return (state?.notes || {})[`${date}:${ei}`] || ''; }
+
+
+function setInfoBar(type,msg){
+  const b=document.getElementById('info-bar');
+  b.className='info-bar '+type; b.innerHTML=msg;
+}
+
+gate({onReady(me){
+  ME = me;
+  if(me.empIdx>=0) selEmp = me.empIdx;
+  document.getElementById('who-line').textContent = me.name;
+  document.getElementById('role-badge').textContent = ROLES[me.role];
+  if(me.role!=='junior') document.body.classList.add('is-senior');
+  if(me.role==='admin') document.getElementById('admin-link').style.display='';
+  startOps(me, ()=>{ updateCounts(); renderActive(true); });
+  onValue(schedRef,(snapshot)=>{
+    const data=snapshot.val();
+    if(data){
+      state=data;
+      if(!state.periods)state.periods=[{label:"1 Jul – 31 Jul 2026",start:"2026-07-01",end:"2026-07-31"}];
+      if(!state.schedule)state.schedule={};
+      if(!state.employees)state.employees=[];
+      setInfoBar('live','<span class="live-dot"></span> Live &mdash; updates automatically');
+      syncSels();
+      renderActive();
+    } else {
+      setInfoBar('loading','&#9203; No schedule published yet. Ask your admin to save.');
+    }
+  },(err)=>{
+    setInfoBar('err','&#9888; Connection error. Please refresh.');
+  });
+}});
+
+function updateCounts(){
+  const open = Object.keys(OPS.issues||{}).filter(id=>(OPS.issueFix?.[id]?.state||'open')!=='resolved').length;
+  const wait = Object.keys(OPS.pm||{}).filter(k=>!OPS.pmSignoff?.[k]).length;
+  const set_=(id,n)=>{ const e=document.getElementById(id); if(!e)return; e.textContent=n; e.style.display=n?'':'none'; };
+  set_('cnt-issues', open); set_('cnt-signoff', wait);
+}
+// Let ops.js switch tabs (e.g. "All issues" button on My Day)
+window.opsGo = function(name){
+  const btn=[...document.querySelectorAll('.nav-btn')].find(b=>b.getAttribute('onclick')?.includes(`'${name}'`));
+  window.showTab(name, btn);
+};
+
+function fmtDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function parseDate(s){return new Date(s+'T00:00:00')}
+function isSun(s){return parseDate(s).getDay()===0}
+function dowName(s){return DAY_ABBR[parseDate(s).getDay()]}
+function dayNum(s){return parseInt(s.slice(8))}
+function dateRange(s,e){
+  const a=[];
+  let d=new Date(s+'T00:00:00');
+  const end=new Date(e+'T00:00:00');
+  while(d<=end){
+    a.push(fmtDate(d));
+    d=new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
+  }
+  return a;
+}
+function toWeeks(dates){const w=[];let wk=[];for(const d of dates){if(isSun(d)&&wk.length){w.push(wk);wk=[];}wk.push(d);}if(wk.length)w.push(wk);return w;}
+function getAssign(date,ei){if(!state||!state.schedule)return 'Day Off';return state.schedule[`${date}:${ei}`]||'Day Off';}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+
+window.showTab = function(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(RENDER[name]) { RENDER[name](document.getElementById('tab-'+name)); window.scrollTo(0,0); return; }
+  if(name==='full'){syncSels();renderFull();}
+  if(name==='personal'){syncSels();renderEmpPicker();renderPersonal();}
+  if(name==='location'){syncSels('loc-psel');renderLocPicker();renderLocation();}
+};
+
+function syncSels(onlyId){
+  if(!state)return;
+  (onlyId?[onlyId]:['full-psel','pers-psel','loc-psel']).forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    const v=s.value;s.innerHTML=state.periods.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
+    if(v&&v<state.periods.length)s.value=v;
+  });
+}
+function curPeriod(id){if(!state)return{start:'2026-06-28',end:'2026-07-31'};const i=parseInt(document.getElementById(id)?.value||0);return state.periods[i]||state.periods[0];}
+
+function renderActive(opsOnly){
+  const active=document.querySelector('.section.active')?.id;
+  const opsName=active?.replace('tab-','');
+  if(RENDER[opsName]){ if(ME) RENDER[opsName](document.getElementById(active)); return; }
+  if(opsOnly) return;
+  if(active==='tab-full'){syncSels();renderFull();}
+  if(active==='tab-personal'){syncSels();renderEmpPicker();renderPersonal();}
+  if(active==='tab-location'){syncSels();renderLocPicker();renderLocation();}
+}
+
+function renderFull(){
+  if(!state){document.getElementById('full-tbl').innerHTML='<div class="no-data">Connecting to live schedule...</div>';return;}
+  const p=curPeriod('full-psel');
+  const dates=dateRange(p.start,p.end);
+  const weeks=toWeeks(dates);
+  const N=state.employees.length;
+  document.getElementById('full-legend').innerHTML=
+    Object.entries(LOC_STYLE).map(([loc,{bg,fg}])=>
+      `<div class="leg"><div class="leg-dot" style="background:${bg};border:1px solid ${fg}30"></div>${loc}</div>`).join('');
+  let hdr=`<tr><th class="name-hd" rowspan="2" style="position:sticky;left:0;min-width:140px">Employee</th>`;
+  weeks.forEach((wk,wi)=>hdr+=`<th colspan="${wk.length}" style="background:#2d3a55">W${wi+1} &middot; ${parseDate(wk[0]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</th>`);
+  hdr+='</tr><tr>';
+  weeks.forEach(wk=>wk.forEach(d=>{
+    hdr+=`<th style="background:var(--navy);color:#fff;font-size:.7rem;min-width:50px">${dayNum(d)}<br>${dowName(d)}</th>`;
+  }));
+  hdr+='</tr>';
+  let tbody='';
+  for(let ei=0;ei<N;ei++){
+    tbody+=`<tr><td class="name-cell">${empName(state.employees[ei])}</td>`;
+    weeks.forEach(wk=>wk.forEach(d=>{
+      const a=getAssign(d,ei);const s=LOC_STYLE[a]||LOC_STYLE["Day Off"];
+      const nt=getNote(d,ei);
+      const noteBadge = nt
+        ? `<div title="${nt.replace(/"/g,'&quot;')}" style="font-size:.62rem;font-weight:600;color:#5A3800;background:#FFF3CD;border-radius:3px;padding:1px 4px;margin-top:2px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">📌 ${nt.slice(0,10)}${nt.length>10?'…':''}</div>`
+        : '';
+      tbody+=`<td style="text-align:center;background:${s.bg};min-width:75px;padding:4px"><span class="chip" style="background:${s.bg};color:${s.fg}">${a==='Day Off'?'Off':a.replace(' Morning',' AM').replace(' Night',' PM').replace('Mobile Lab','Mob.')}</span>${noteBadge}</td>`;
+    }));
+    tbody+='</tr>';
+  }
+  document.getElementById('full-tbl').innerHTML=`<table><thead>${hdr}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+function renderEmpPicker(){
+  if(!state){document.getElementById('emp-picker').innerHTML='';return;}
+  document.getElementById('emp-picker').innerHTML=state.employees.map((e,i)=>{
+    const n = empName(e);
+    return `<div class="emp-card ${selEmp===i?'active':''}" onclick="selEmpFn(${i})">
+      <div class="emp-init">${initials(n)}</div>
+      <div class="emp-label">${n}</div>
+    </div>`;
+  }).join('');
+}
+window.selEmpFn = function(i){selEmp=i;renderEmpPicker();renderPersonal();};
+
+function renderPersonal(){
+  if(!state){document.getElementById('personal-content').innerHTML='<div class="no-data">Loading...</div>';return;}
+  const emp=empName(state.employees[selEmp]);
+  const p=curPeriod('pers-psel');
+  const dates=dateRange(p.start,p.end);
+  const today=fmtDate(new Date());
+
+  const workDays=dates.filter(d=>getAssign(d,selEmp)!=='Day Off').length;
+  const byLoc={};
+  dates.forEach(d=>{const a=getAssign(d,selEmp);if(a!=='Day Off')byLoc[a]=(byLoc[a]||0)+1;});
+
+  let html=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+    <div style="width:46px;height:46px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0">${initials(emp)}</div>
+    <div><div style="font-size:1.1rem;font-weight:700;color:var(--navy)">${emp}</div>
+    <div style="font-size:.8rem;color:var(--muted)">${parseDate(p.start).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} &ndash; ${parseDate(p.end).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat" style="background:var(--navy);color:#fff">
+      <div style="font-size:1.5rem;font-weight:700">${workDays}</div>
+      <div style="font-size:.7rem;opacity:.8">Working days</div>
+    </div>
+    ${Object.entries(byLoc).map(([loc,cnt])=>{const s=LOC_STYLE[loc]||LOC_STYLE["Day Off"];
+      return `<div class="stat" style="background:${s.bg};color:${s.fg};border-color:${s.fg}20">
+        <div style="font-size:1.4rem;font-weight:700">${cnt}</div>
+        <div style="font-size:.65rem">${loc}</div></div>`;}).join('')}
+  </div>`;
+
+  const startD=parseDate(p.start);const endD=parseDate(p.end);
+  const months=[];
+  let cur=new Date(startD.getFullYear(),startD.getMonth(),1);
+  const lastM=new Date(endD.getFullYear(),endD.getMonth(),1);
+  while(cur<=lastM){months.push({y:cur.getFullYear(),m:cur.getMonth()});cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);}
+
+  months.forEach(({y,m})=>{
+    const firstDow=new Date(y,m,1).getDay();
+    const dim=new Date(y,m+1,0).getDate();
+    html+=`<div class="cal-wrap"><div class="cal-hdr"><span class="cal-title">${MONTH_NAMES[m]} ${y}</span></div>
+      <div class="cal-grid">
+        ${DAY_ABBR.map(d=>`<div class="cal-dow">${d}</div>`).join('')}`;
+    for(let i=0;i<firstDow;i++)html+=`<div class="cal-day empty"></div>`;
+    for(let day=1;day<=dim;day++){
+      const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const inR=ds>=p.start&&ds<=p.end;
+      const isTod=ds===today;
+      let cls='cal-day';if(!inR)cls+=' outrange';if(isTod)cls+=' is-today';
+      let chip='';
+      if(inR){const a=getAssign(ds,selEmp);const s=LOC_STYLE[a]||LOC_STYLE["Day Off"];
+        const note=getNote(ds,selEmp);
+        if(a!=='Day Off') chip=`<div class="cal-chip" style="background:${s.bg};color:${s.fg}">${a.replace(' Morning',' AM').replace(' Night',' PM')}</div>`;
+        if(note) chip+=`<div class="cal-chip" style="background:#FFF8DB;color:#5A3800;font-size:.6rem;margin-top:1px" title="${note.replace(/"/g,'&quot;')}">📌 ${note.slice(0,14)}${note.length>14?'…':''}</div>`;}
+      html+=`<div class="${cls}"><div class="cal-num">${day}</div>${chip}</div>`;
+    }
+    const trail=(7-(firstDow+dim)%7)%7;
+    for(let i=0;i<trail;i++)html+=`<div class="cal-day empty"></div>`;
+    html+='</div></div>';
+  });
+
+  html+=`<div class="card"><div class="card-head"><h2>Day-by-day</h2></div>
+    <div style="padding:0"><table><thead><tr><th>Date</th><th>Day</th><th>Assignment</th></tr></thead><tbody>
+    ${dates.map(d=>{const a=getAssign(d,selEmp);const s=LOC_STYLE[a]||LOC_STYLE["Day Off"];
+      const noteHtml = getNote(d,selEmp) ? `<div style="font-size:.72rem;color:#7C4A00;margin-top:2px;padding:2px 6px;background:#FFF8DB;border-radius:3px;display:inline-block">📌 ${getNote(d,selEmp)}</div>` : '';
+      return `<tr><td style="font-weight:500">${parseDate(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td style="color:var(--muted)">${dowName(d)}</td>
+        <td><span class="chip" style="background:${s.bg};color:${s.fg}">${a}</span>${noteHtml}</td></tr>`;}).join('')}
+    </tbody></table></div></div>`;
+
+  document.getElementById('personal-content').innerHTML=html;
+}
+
+window.selLoc = 'KHBP';
+const LOC_LIST = ["KHBP","AYC Morning","AYC Night","Mobile Lab","Outreach","Aqaba"];
+const LOC_ICONS = {"KHBP":"🏥","AYC Morning":"🌅","AYC Night":"🌙","Mobile Lab":"🚐","Outreach":"📢","Aqaba":"🌊"};
+
+function renderLocPicker(){
+  const container = document.getElementById('loc-picker');
+  if(!container) return;
+  container.innerHTML = LOC_LIST.map(loc => {
+    const s = LOC_STYLE[loc] || LOC_STYLE["Day Off"];
+    const active = selLoc === loc;
+    return `<div class="emp-card ${active?'active':''}" onclick="selectLoc('${loc}')"
+      style="${active?'border-color:'+s.fg+';background:'+s.bg+';':''}"
+    >
+      <div class="emp-init" style="background:${s.fg}">${LOC_ICONS[loc]||loc[0]}</div>
+      <div class="emp-label" style="color:${active?s.fg:'var(--navy)'}">${loc}</div>
+    </div>`;
+  }).join('');
+}
+
+window.selectLoc = function(loc){ selLoc=loc; renderLocPicker(); renderLocation(); };
+
+function renderLocation(){
+  if(!state){ document.getElementById('location-content').innerHTML='<div class="no-data">Loading...</div>'; return; }
+  const p = curPeriod('loc-psel');
+  const dates = dateRange(p.start, p.end);
+  const loc = selLoc;
+  const s = LOC_STYLE[loc] || LOC_STYLE["Day Off"];
+  const MONTH_NAMES_L=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAY_ABBR_L=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  // Count total assignments
+  const totalAssignments = dates.reduce((sum,d)=>{
+    return sum + state.employees.map((e,ei)=>ei).filter(ei=>getAssign(d,ei)===loc).length;
+  },0);
+
+  let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+    <div style="width:46px;height:46px;border-radius:50%;background:${s.fg};color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">${LOC_ICONS[loc]||loc[0]}</div>
+    <div>
+      <div style="font-size:1.1rem;font-weight:700;color:var(--navy)">${loc}</div>
+      <div style="font-size:.8rem;color:var(--muted)">${parseDate(p.start).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} – ${parseDate(p.end).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+    </div>
+  </div>
+  <div class="stat-grid" style="margin-bottom:1.25rem">
+    <div class="stat" style="background:${s.fg};color:#fff">
+      <div style="font-size:1.5rem;font-weight:700">${totalAssignments}</div>
+      <div style="font-size:.7rem;opacity:.8">Total shifts</div>
+    </div>
+  </div>`;
+
+  // Calendar — one per month
+  const startD = parseDate(p.start); const endD = parseDate(p.end);
+  const months = [];
+  let cur = new Date(startD.getFullYear(), startD.getMonth(), 1);
+  const lastM = new Date(endD.getFullYear(), endD.getMonth(), 1);
+  while(cur <= lastM){ months.push({y:cur.getFullYear(),m:cur.getMonth()}); cur=new Date(cur.getFullYear(),cur.getMonth()+1,1); }
+
+  const today = fmtDate(new Date());
+
+  months.forEach(({y,m})=>{
+    const firstDow = new Date(y,m,1).getDay();
+    const dim = new Date(y,m+1,0).getDate();
+    html += `<div class="cal-wrap"><div class="cal-hdr" style="background:${s.fg}"><span class="cal-title">${MONTH_NAMES_L[m]} ${y} — ${loc}</span></div>
+      <div class="cal-grid">
+        ${DAY_ABBR_L.map(d=>`<div class="cal-dow">${d}</div>`).join('')}`;
+    for(let i=0;i<firstDow;i++) html+=`<div class="cal-day empty"></div>`;
+    for(let day=1;day<=dim;day++){
+      const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const inR = ds>=p.start && ds<=p.end;
+      const isTod = ds===today;
+      let cls='cal-day'; if(!inR)cls+=' outrange'; if(isTod)cls+=' is-today';
+
+      let chip='';
+      if(inR){
+        const staffHere = state.employees.map(e=>({name:empName(e)})).filter((_,ei)=>getAssign(ds,ei)===loc);
+        if(staffHere.length>0){
+          chip = staffHere.map(({name})=>{
+            const initials2 = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+            return `<div class="cal-chip" style="background:${s.bg};color:${s.fg};margin-bottom:1px" title="${name}">${initials2}</div>`;
+          }).join('');
+        } else {
+          chip = `<div style="font-size:.6rem;color:#ccc;margin-top:2px">—</div>`;
+        }
+      }
+      html += `<div class="${cls}"><div class="cal-num">${day}</div>${chip}</div>`;
+    }
+    const trail=(7-(firstDow+dim)%7)%7;
+    for(let i=0;i<trail;i++) html+=`<div class="cal-day empty"></div>`;
+    html+='</div></div>';
+  });
+
+  // Day-by-day list
+  html += `<div class="card"><div class="card-head"><h2>Day-by-day staffing at ${loc}</h2></div>
+    <div style="padding:0"><table><thead><tr><th>Date</th><th>Day</th><th>Staff assigned</th><th>#</th></tr></thead><tbody>
+    ${dates.map(d=>{
+      const staffHere = state.employees.map((e,ei)=>({name:empName(e),ei})).filter(({ei})=>getAssign(d,ei)===loc);
+      const names = staffHere.length>0 ? staffHere.map(({name})=>`<span class="chip" style="background:${s.bg};color:${s.fg};margin:1px">${name}</span>`).join(' ') : '<span style="color:var(--muted);font-size:.75rem">Nobody assigned</span>';
+      return `<tr>
+        <td style="font-weight:500">${parseDate(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td style="color:var(--muted)">${DAY_ABBR_L[parseDate(d).getDay()]}</td>
+        <td>${names}</td>
+        <td style="text-align:center;font-weight:700;color:${staffHere.length>0?s.fg:'var(--muted)'}">${staffHere.length}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div></div>`;
+
+  document.getElementById('location-content').innerHTML=html;
+}
+
+
+// Expose render functions globally so inline onchange handlers can call them
+window.renderFull = renderFull;
+window.renderPersonal = renderPersonal;
+if (typeof renderLocation !== 'undefined') window.renderLocation = renderLocation;
+
+</script>
+</body>
+</html>

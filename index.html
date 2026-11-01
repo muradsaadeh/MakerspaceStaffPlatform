@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Makerspace</title>
+<link rel="stylesheet" href="ops.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0F1623;color:#fff;min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+header{padding:1.25rem 2rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);position:relative;z-index:1}
+.logo{width:36px;height:36px;background:#1A6FB5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.logo-text{font-size:.95rem;font-weight:600;color:#E2E8F0}
+.logo-sub{font-size:.72rem;color:#64748B;margin-top:1px}
+.who{margin-left:auto;font-size:.8rem;color:#94A3B8;display:flex;gap:10px;align-items:center}
+.who button{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:.75rem}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 16px;position:relative;z-index:1}
+.hero{text-align:center;margin-bottom:2.5rem;max-width:560px}
+.hero h1{font-size:2.1rem;font-weight:700;line-height:1.2;margin-bottom:.75rem;background:linear-gradient(135deg,#fff 0%,#93C5FD 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:.95rem;color:#94A3B8;line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;width:100%;max-width:580px}
+.card{border-radius:14px;padding:1.75rem 1.5rem;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;position:relative}
+.card:hover{transform:translateY(-3px)}
+.card-staff{background:#1A2744;border:1px solid rgba(59,130,246,.25)}
+.card-admin{background:#1C1A2A;border:1px solid rgba(139,92,246,.25)}
+.card-icon{font-size:1.5rem;margin-bottom:.8rem}
+.card h2{font-size:1.05rem;font-weight:600;margin-bottom:.4rem;color:#F1F5F9}
+.card p{font-size:.82rem;color:#94A3B8;line-height:1.5}
+.card-arrow{position:absolute;bottom:1.5rem;right:1.5rem;opacity:.5;color:#fff}
+footer{text-align:center;padding:1.25rem;font-size:.75rem;color:#334155;position:relative;z-index:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">&#128295;</div>
+  <div>
+    <div class="logo-text">The Makerspace — Staff Platform</div>
+    <div class="logo-sub">Schedule &middot; Calendar &middot; Maintenance &middot; KHBP &middot; AYC &middot; Mobile Lab &middot; Aqaba</div>
+  </div>
+  <div class="who" id="who"></div>
+</header>
+<main>
+  <div class="hero">
+    <h1>The Makerspace Staff Platform</h1>
+    <p>Your schedule, the makerspace calendar, machine checks and problem reports — in one place.</p>
+  </div>
+  <div class="cards" id="cards"></div>
+</main>
+<footer>The Makerspace Staff &middot; Internal use only</footer>
+<script type="module">
+import { gate, logout, esc, ROLES } from './common.js';
+window.logout = logout;
+gate({onReady(me){
+  document.getElementById('who').innerHTML = `${esc(me.name)} · ${esc(ROLES[me.role])} <button onclick="logout()">Sign out</button>`;
+  let html = `<a href="staff.html" class="card card-staff"><div class="card-icon">&#128101;</div><h2>My workspace</h2>
+    <p>My day, maintenance checks, problem reports, calendar and schedules${me.role!=='junior'?' — plus sign-off and logs':''}.</p><div class="card-arrow">&#8594;</div></a>`;
+  if(me.role==='admin') html += `<a href="admin.html" class="card card-admin"><div class="card-icon">&#9881;&#65039;</div><h2>Admin panel</h2>
+    <p>Staff and logins, rotation schedule, machines and everything else.</p><div class="card-arrow">&#8594;</div></a>`;
+  document.getElementById('cards').innerHTML = html;
+  if(me.role!=='admin') location.replace('staff.html');
+}});
+</script>
+</body>
+</html>

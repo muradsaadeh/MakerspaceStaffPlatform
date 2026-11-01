@@ -1,0 +1,51 @@
+{
+  "rules": {
+    "rotation": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('roles').child(auth.uid).val() === 'admin'"
+    },
+    "roles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || (!root.child('roles').exists() && $uid === auth.uid && newData.val() === 'admin'))",
+        ".validate": "newData.val() === 'junior' || newData.val() === 'senior' || newData.val() === 'admin'"
+      }
+    },
+    "pending": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).val() === 'admin'",
+      "$uid": {
+        ".write": "auth != null && ($uid === auth.uid || root.child('roles').child(auth.uid).val() === 'admin')"
+      }
+    },
+    "machines": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')"
+    },
+    "events": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')"
+    },
+    "pm": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      "$key": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).exists() && (!root.child('pmSignoff').child($key).exists() || root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')",
+        ".validate": "newData.child('uid').val() === auth.uid || !newData.exists()"
+      }
+    },
+    "pmSignoff": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')"
+    },
+    "issues": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      "$id": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).exists() && (!data.exists() || root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')",
+        ".validate": "!newData.exists() || newData.child('uid').val() === auth.uid || data.exists()"
+      }
+    },
+    "issueFix": {
+      ".read": "auth != null && root.child('roles').child(auth.uid).exists()",
+      ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'senior')"
+    }
+  }
+}

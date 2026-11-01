@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Makerspace Staff Schedule </title>
+<style>
+:root{
+  --navy:#1C2333;--navy2:#2d3a55;--bg:#F5F6F8;--card:#fff;
+  --border:#E0E2E8;--text:#1C2333;--muted:#6B7280;
+  --khbp-bg:#D6E8F7;--khbp-fg:#0D3F6E;
+  --aycm-bg:#D5F0E5;--aycm-fg:#084D37;
+  --aycn-bg:#E9E5FC;--aycn-fg:#31216B;
+  --mob-bg:#FDEECE;--mob-fg:#6B3E00;
+  --out-bg:#FDE0EB;--out-fg:#6B162F;
+  --off-bg:#F0F0EE;--off-fg:#888;
+  --red-bg:#FFD7D7;--red-fg:#8B0000;
+  --grn-bg:#E8F5E9;--grn-fg:#1B5E20;
+  --radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#lock{position:fixed;inset:0;background:#0F1623;display:flex;align-items:center;justify-content:center;z-index:9999}
+.lock-box{background:#1A2035;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:2.5rem 2rem;width:320px;text-align:center}
+.lock-icon{font-size:2.5rem;margin-bottom:1rem}
+.lock-box h1{font-size:1.15rem;font-weight:700;color:#F1F5F9;margin-bottom:.35rem}
+.lock-box p{font-size:.82rem;color:#64748B;margin-bottom:1.5rem}
+.lock-input{width:100%;padding:.65rem 1rem;font-size:1.1rem;letter-spacing:.35em;border:1.5px solid rgba(255,255,255,.1);border-radius:8px;text-align:center;background:rgba(255,255,255,.05);color:#fff;font-family:monospace;margin-bottom:.75rem}
+.lock-input:focus{outline:none;border-color:#3B82F6}
+.lock-btn{width:100%;padding:.7rem;background:#1A6FB5;color:#fff;border:none;border-radius:8px;font-size:.95rem;cursor:pointer;font-weight:600;font-family:inherit;transition:background .15s}
+.lock-btn:hover{background:#1558a0}
+.lock-err{color:#F87171;font-size:.8rem;margin-top:.5rem;min-height:1rem}
+.lock-back{margin-top:1rem;font-size:.78rem;color:#475569;cursor:pointer;text-decoration:underline}
+.lock-back:hover{color:#94A3B8}
+#app{display:none}
+header{background:var(--navy);color:#fff;padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+header h1{font-size:1rem;font-weight:600}
+header p{font-size:.75rem;color:#9AABB8;margin-top:1px}
+.hbadge{background:#F0B429;color:#5A3800;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.hbtns{display:flex;gap:8px;align-items:center}
+.sync-status{font-size:.72rem;padding:3px 10px;border-radius:20px;font-weight:600}
+.sync-ok{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.3)}
+.sync-saving{background:rgba(251,191,36,.15);color:#FBbf24;border:1px solid rgba(251,191,36,.3)}
+.sync-err{background:rgba(248,113,113,.15);color:#F87171;border:1px solid rgba(248,113,113,.3)}
+nav{background:var(--navy2);display:flex;overflow-x:auto}
+.nav-btn{padding:.65rem 1.25rem;color:#CBD5E0;font-size:.85rem;cursor:pointer;border:none;background:transparent;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;font-family:inherit}
+.nav-btn.active{color:#fff;border-bottom-color:#F0B429}
+.nav-btn:hover{color:#fff}
+main{padding:1.5rem}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.25rem;overflow:hidden}
+.card-head{padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.card-head h2{font-size:.95rem;font-weight:600}
+.card-body{padding:1.25rem}
+.btn{padding:6px 14px;border-radius:6px;font-size:.82rem;cursor:pointer;border:1px solid var(--border);background:#fff;font-family:inherit;transition:all .1s}
+.btn:hover{background:var(--bg)}
+.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}.btn-primary:hover{background:var(--navy2)}
+.btn-sm{padding:4px 10px;font-size:.75rem}
+.btn-danger{color:#DC2626;border-color:#FCA5A5}.btn-danger:hover{background:#FFF5F5}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.78rem;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+input[type=text],select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit;background:#fff;color:var(--text)}
+input[type=text]:focus,select:focus{outline:none;border-color:#93C5FD}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{padding:7px 9px;border:1px solid var(--border);white-space:nowrap}
+th{background:var(--navy);color:#fff;font-weight:500;text-align:center;position:sticky;top:0;z-index:10}
+th.name-hd{text-align:left}
+td.name-cell{font-weight:600;color:var(--navy);position:sticky;left:0;background:#fff;z-index:5;min-width:140px}
+select.cell-sel{border:none;padding:2px 4px;font-size:.75rem;font-weight:600;border-radius:4px;cursor:pointer;width:100%;text-align:center;font-family:inherit}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem;text-align:center}
+.metric-val{font-size:1.6rem;font-weight:700;color:var(--navy)}
+.metric-lbl{font-size:.72rem;color:var(--muted);margin-top:2px}
+.brief-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.brief-day-card{border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.brief-day-hd{padding:5px 8px;font-size:.72rem;font-weight:700;text-align:center;background:var(--navy);color:#fff}
+.brief-loc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;font-size:.72rem;border-top:1px solid var(--border)}
+.brief-loc-row.ok{background:var(--grn-bg)}.brief-loc-row.warn{background:var(--red-bg)}
+.brief-count{font-weight:700;font-size:.85rem}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.leg{display:flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600}
+.leg-dot{width:11px;height:11px;border-radius:3px}
+.period-bar{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
+.period-bar label{font-size:.82rem;color:var(--muted)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:30px;font-size:.85rem;z-index:9998;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}.toast.warn{background:#B91C1C}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-btn .cnt{background:#DC2626;color:#fff;border-radius:10px;font-size:.65rem;padding:1px 6px;margin-left:4px;font-weight:700}
+</style>
+<link rel="stylesheet" href="ops.css">
+</head>
+<body>
+
+<div id="app">
+<header>
+  <div>
+    <h1>&#9881;&#65039; Admin Panel &mdash; Staff Schedule</h1>
+    <p><span class="live-dot"></span>Live sync &middot; Max 6 days/week &middot; <span id="who-line"></span></p>
+  </div>
+  <div class="hbtns">
+    <span class="hbadge">Admin</span>
+    <span class="sync-status sync-ok" id="sync-status">&#10003; Synced</span>
+    <a href="staff.html" class="btn-ghost" style="text-decoration:none">&#128295; Workspace</a>
+    <button class="btn-ghost" onclick="logout()">Sign out</button>
+  </div>
+</header>
+<nav>
+  <button class="nav-btn active" onclick="showTab('names',this)">&#128101; Names</button>
+  <button class="nav-btn" onclick="showTab('schedule',this)">&#128197; Schedule</button>
+  <button class="nav-btn" onclick="showTab('brief',this)">&#128202; Daily Brief</button>
+  <button class="nav-btn" onclick="showTab('summary',this)">&#128200; Summary</button>
+  <button class="nav-btn" onclick="showTab('calendar',this)">&#128467;&#65039; Calendar</button>
+  <button class="nav-btn" onclick="showTab('maint',this)">&#128295; Maintenance</button>
+  <button class="nav-btn" onclick="showTab('issues',this)">&#9888;&#65039; Issues<span class="cnt" id="cnt-issues" style="display:none"></span></button>
+  <button class="nav-btn" onclick="showTab('signoff',this)">&#9989; Sign-off<span class="cnt" id="cnt-signoff" style="display:none"></span></button>
+  <button class="nav-btn" onclick="showTab('logs',this)">&#128203; Logs</button>
+  <button class="nav-btn" onclick="showTab('machines',this)">&#127981; Machines</button>
+</nav>
+<main>
+  <div id="tab-names" class="section active">
+    <div class="card">
+      <div class="card-head"><h2>Employees</h2><button class="btn btn-primary" onclick="openAddEmp()">+ Add</button></div>
+      <div class="card-body"><table style="max-width:720px">
+        <thead><tr><th style="width:36px">#</th><th class="name-hd">Name</th><th class="name-hd">Email</th><th style="width:90px">Actions</th></tr></thead>
+        <tbody id="names-tbody"></tbody>
+      </table>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:.75rem;max-width:720px">Each person needs an email here to get a login. <b>Create login</b> makes their account and emails them a link to set their own password. Juniors do checks and report problems; Seniors also sign off checks, update issues, edit the calendar and machines; Admins also manage this panel.</p>
+      </div>
+    </div>
+    <div class="card" id="pending-card" style="display:none">
+      <div class="card-head"><h2>&#9203; Signed in but waiting for access</h2></div>
+      <div class="card-body" id="pending-body"></div>
+    </div>
+  </div>
+  <div id="tab-schedule" class="section">
+    <div class="period-bar">
+      <label>Period:</label>
+      <select id="period-sel" onchange="renderSchedule()"></select>
+      <button class="btn btn-sm btn-primary" onclick="addMonth()">+ Add month</button>
+      <button class="btn btn-sm btn-danger" onclick="deletePeriod()">🗑 Delete period</button>
+      <button style="margin-left:auto;background:#0D5CAB;border:none;color:#fff;padding:8px 18px;border-radius:6px;font-size:.9rem;cursor:pointer;font-family:inherit;font-weight:600;box-shadow:0 2px 4px rgba(13,92,171,.25)" onclick="notifyStaff()">📧 Notify staff by email</button>
+      <button class="btn btn-sm" style="border-color:#FCA5A5;color:#991B1B" onclick="resetAll()">⚠ Reset all data</button>
+    </div>
+
+    <!-- Bulk assign panel -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:.85rem;color:var(--navy)">⚡ Bulk assign:</strong>
+        <select id="bulk-emp" style="min-width:160px"><option value="">-- All employees --</option></select>
+        <select id="bulk-loc" style="min-width:130px"></select>
+        <label style="font-size:.8rem;color:var(--muted)">From</label>
+        <input type="date" id="bulk-from" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:.82rem">
+        <label style="font-size:.8rem;color:var(--muted)">To</label>
+        <input type="date" id="bulk-to" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:.82rem">
+        <button class="btn btn-sm btn-primary" onclick="bulkApply()">Apply</button>
+        <span id="bulk-status" style="font-size:.75rem;color:var(--muted)"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <span style="font-size:.75rem;color:var(--muted)">Skip these days:</span>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="0"> Sun</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="1"> Mon</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="2"> Tue</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="3"> Wed</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="4"> Thu</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="5"> Fri</label>
+        <label style="font-size:.75rem;display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" class="bulk-skip" value="6"> Sat</label>
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:6px">Tip: pick employee, location, date range, tick any days to skip, then Apply. Overwrites existing assignments in that range (except skipped days).</div>
+    </div>
+    <div class="legend" id="sched-legend"></div>
+    <div class="card"><div class="card-body" style="padding:0"><div class="tbl-wrap" id="sched-wrap"></div></div></div>
+  </div>
+  <div id="tab-brief" class="section">
+    <div class="period-bar"><label>Period:</label><select id="brief-period-sel" onchange="renderBrief()"></select></div>
+    <div class="metrics" id="brief-metrics"></div>
+    <div id="brief-content"></div>
+    <p style="font-size:.78rem;color:#DC2626;margin-top:.5rem">&#9888; Red = below minimum. Fix in the Schedule tab.</p>
+  </div>
+  <div id="tab-calendar" class="section"></div>
+  <div id="tab-maint" class="section"></div>
+  <div id="tab-issues" class="section"></div>
+  <div id="tab-signoff" class="section"></div>
+  <div id="tab-logs" class="section"></div>
+  <div id="tab-machines" class="section"></div>
+  <div id="tab-summary" class="section">
+    <div class="period-bar"><label>Period:</label><select id="sum-period-sel" onchange="renderSummary()"></select></div>
+    <div id="summary-content"></div>
+  </div>
+</main>
+</div>
+
+<div id="modal-root"></div>
+<div class="toast" id="toast"></div>
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script type="module">
+import { gate, logout, db, ref, set, remove, onValue, EMAILJS_CONFIG, emailReady, sendEmail, createStaffLogin, resetPassword, ROLES, esc } from './common.js';
+import { startOps, RENDER, S as OPS } from './ops.js';
+window.logout = logout;
+const schedRef = ref(db, 'rotation');
+let ME = null, pendingUsers = {};
+
+gate({allow:['admin'], onReady(me){
+  ME = me;
+  document.getElementById('app').style.display='block';
+  document.getElementById('who-line').textContent = me.name;
+  startFirebase();
+  startOps(me, ()=>{ updateCounts(); const a=activeTab(); if(RENDER[a]) RENDER[a](document.getElementById('tab-'+a)); if(a==='names') renderNames(); });
+  onValue(ref(db,'pending'), snap=>{ pendingUsers = snap.val()||{}; if(activeTab()==='names') renderNames(); });
+}});
+function activeTab(){ return document.querySelector('.section.active')?.id?.replace('tab-',''); }
+function updateCounts(){
+  const open = Object.keys(OPS.issues||{}).filter(id=>(OPS.issueFix?.[id]?.state||'open')!=='resolved').length;
+  const wait = Object.keys(OPS.pm||{}).filter(k=>!OPS.pmSignoff?.[k]).length;
+  [['cnt-issues',open],['cnt-signoff',wait]].forEach(([id,n])=>{ const e=document.getElementById(id); e.textContent=n; e.style.display=n?'':'none'; });
+}
+window.opsGo = function(name){
+  const btn=[...document.querySelectorAll('.nav-btn')].find(b=>b.getAttribute('onclick')?.includes(`'${name}'`));
+  window.showTab(name, btn);
+};
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const LOCS=["KHBP","AYC Morning","AYC Night","Mobile Lab","Outreach","Aqaba","Day Off"];
+const LOC_STYLE={
+  "KHBP":       {bg:"#D6E8F7",fg:"#0D3F6E"},
+  "AYC Morning":{bg:"#D5F0E5",fg:"#084D37"},
+  "AYC Night":  {bg:"#E9E5FC",fg:"#31216B"},
+  "Mobile Lab": {bg:"#FDEECE",fg:"#6B3E00"},
+  "Outreach":   {bg:"#FDE0EB",fg:"#6B162F"},
+  "Aqaba":      {bg:"#CFF4F4",fg:"#055160"},
+  "Day Off":    {bg:"#F0F0EE",fg:"#888"},
+};
+const MIN_STAFF={"KHBP":2,"AYC Morning":1,"AYC Night":1,"Mobile Lab":2};
+const DAY_ABBR=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let state = {
+  employees:[
+    {name:"Ala'a Janbak",email:""},{name:"Mohammed Hinti",email:""},
+    {name:"Bashar Al-zubi",email:""},{name:"Ghadeer AbuRashed",email:""},
+    {name:"Ahmad Shwayat",email:""},{name:"Ahmad Abu Ghazaleh",email:""},
+    {name:"Momen Kamal",email:""},{name:"Ahmad Abu Slayeh",email:""},
+    {name:"Ismail Qashoue",email:""},{name:"Ahmad Fares",email:""},
+    {name:"Murad Saadeh",email:""}
+  ],
+  schedule:{},
+  periods:[{label:"1 Jul – 31 Jul 2026",start:"2026-07-01",end:"2026-07-31"}]
+};
+let fbReady = false;
+let saveTimer = null;
+
+// ─── Employee shape helpers (backward compatible with string arrays) ─────────
+function empName(emp){ return typeof emp === 'string' ? emp : (emp?.name || ''); }
+function empEmail(emp){ return typeof emp === 'string' ? '' : (emp?.email || ''); }
+function normalizeEmployees(){
+  if(!state.employees) state.employees = [];
+  state.employees = state.employees.map(e => typeof e === 'string' ? {name:e, email:''} : e);
+}
+
+// ─── Notes helpers ───────────────────────────────────────────────────────────
+function getNote(date, ei){ return (state.notes || {})[`${date}:${ei}`] || ''; }
+function setNote(date, ei, txt){
+  if(!state.notes) state.notes = {};
+  const trimmed = (txt || '').trim();
+  if(trimmed) state.notes[`${date}:${ei}`] = trimmed;
+  else delete state.notes[`${date}:${ei}`];
+  saveToFirebase();
+}
+
+function setSyncStatus(s){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  if(s==='saving'){el.className='sync-status sync-saving';el.textContent='&#8593; Saving...';}
+  else if(s==='ok'){el.className='sync-status sync-ok';el.innerHTML='&#10003; Synced';}
+  else{el.className='sync-status sync-err';el.textContent='&#9888; Error';}
+}
+
+function saveToFirebase(){
+  setSyncStatus('saving');
+  window._localSaveTs = Date.now();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    set(schedRef, state)
+      .then(()=>{ window._localSaveTs = Date.now(); setSyncStatus('ok'); })
+      .catch(()=>setSyncStatus('err'));
+  }, 600);
+}
+
+function startFirebase(){
+  onValue(schedRef, (snapshot)=>{
+    const data = snapshot.val();
+    if(data){
+      state = data;
+      if(!state.periods) state.periods=[{label:"1 Jul – 31 Jul 2026",start:"2026-07-01",end:"2026-07-31"}];
+      if(!state.schedule) state.schedule={};
+      if(!state.notes) state.notes={};
+      normalizeEmployees();
+    }
+    if(!fbReady){
+      fbReady=true;
+      // link the signed-in admin to their own staff row (so they also get issue alerts)
+      const mi = state.employees.findIndex(e=>empEmail(e).toLowerCase()===String(ME?.email||'').toLowerCase());
+      if(mi>=0 && !state.employees[mi].uid){ state.employees[mi] = {...state.employees[mi], uid:ME.uid}; saveToFirebase(); }
+      renderNames();
+      syncSels();
+      setSyncStatus('ok');
+    } else {
+      // Remote update — re-render current tab
+      const active=document.querySelector('.section.active')?.id?.replace('tab-','');
+      if(active) ({names:renderNames,schedule:renderSchedule,brief:renderBrief,summary:renderSummary})[active]?.();
+      syncSels();
+      setSyncStatus('ok');
+    }
+  }, ()=>setSyncStatus('err'));
+}
+
+
+// ── Date utils ───────────────────────────────────────────────────────────────
+function fmtDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function parseDate(s){return new Date(s+'T00:00:00')}
+function isSun(s){return parseDate(s).getDay()===0}
+function dowName(s){return DAY_ABBR[parseDate(s).getDay()]}
+function dayNum(s){return parseInt(s.slice(8))}
+function dateRange(s,e){
+  const a=[];
+  let d=new Date(s+'T00:00:00');
+  const end=new Date(e+'T00:00:00');
+  while(d<=end){
+    a.push(fmtDate(d));
+    d=new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
+  }
+  return a;
+}
+function toWeeks(dates){const w=[];let wk=[];for(const d of dates){if(isSun(d)&&wk.length){w.push(wk);wk=[];}wk.push(d);}if(wk.length)w.push(wk);return w;}
+function getAssign(date,ei){return state.schedule[`${date}:${ei}`]||'Day Off';}
+function setAssign(date,ei,loc){state.schedule[`${date}:${ei}`]=loc;saveToFirebase();}
+function getWeekDays(ei,wk){return wk.filter(d=>getAssign(d,ei)!=='Day Off').length;}
+
+// ── Tab ──────────────────────────────────────────────────────────────────────
+window.showTab = function(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(RENDER[name]){ RENDER[name](document.getElementById('tab-'+name)); return; }
+  ({names:renderNames,schedule:()=>{syncSels();renderSchedule()},brief:()=>{syncSels();renderBrief()},summary:()=>{syncSels();renderSummary()}})[name]?.();
+};
+function syncSels(){
+  if(!state || !state.periods) return;
+  ['period-sel','brief-period-sel','sum-period-sel'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    const v=parseInt(s.value)||0;
+    s.innerHTML=state.periods.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
+    s.value = String(Math.min(Math.max(v,0), state.periods.length-1));
+  });
+}
+function curPeriod(id){const i=parseInt(document.getElementById(id)?.value||0);return state.periods[i]||state.periods[0];}
+
+// ── Add month ────────────────────────────────────────────────────────────────
+// Helper: build a period spanning a full calendar month
+function makeMonthPeriod(year, monthIdx){
+  // monthIdx is 0-based: 0=Jan, 11=Dec
+  const startDate = new Date(year, monthIdx, 1);
+  const endDate = new Date(year, monthIdx+1, 0); // last day of month
+  const startStr = fmtDate(startDate);
+  const endStr = fmtDate(endDate);
+  const label = `${startDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} – ${endDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}`;
+  return {label, start:startStr, end:endStr};
+}
+
+window.addMonth = function(){
+  if(!state.periods || state.periods.length===0){
+    state.periods = [makeMonthPeriod(2026, 6)]; // July 2026 default
+  }
+  const last = state.periods[state.periods.length-1];
+  // Parse the last period's end date and find the next calendar month
+  const lastEnd = new Date(last.end+'T00:00:00');
+  let nextYear = lastEnd.getFullYear();
+  let nextMonth = lastEnd.getMonth() + 1; // next month after last end's month
+  // If last end is on the very last day of its month, we want the FOLLOWING month
+  // (e.g. last end Jul 31 → new period = Aug)
+  // If last end is mid-month (shouldn't happen but safe), still go to next month
+  if(nextMonth > 11){ nextMonth = 0; nextYear++; }
+  const newPeriod = makeMonthPeriod(nextYear, nextMonth);
+  state.periods.push(newPeriod);
+  const newIdx = state.periods.length-1;
+  saveToFirebase();
+  // Force all period dropdowns to refresh and show the new month
+  ['period-sel','brief-period-sel','sum-period-sel'].forEach(id=>{
+    const s=document.getElementById(id); if(!s) return;
+    s.innerHTML = state.periods.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
+    s.value = String(newIdx);
+  });
+  renderSchedule();
+  toast('Added: '+newPeriod.label);
+};
+
+window.deletePeriod = function(){
+  if(state.periods.length <= 1){
+    toast('Cannot delete the last remaining period', true);
+    return;
+  }
+  const sel = document.getElementById('period-sel');
+  const idx = parseInt(sel.value) || 0;
+  const p = state.periods[idx];
+  if(!confirm(`Delete period "${p.label}"? Any schedule data for these dates will also be removed.`)) return;
+  // Remove the period
+  state.periods.splice(idx, 1);
+  // Remove schedule entries for those dates
+  const datesToRemove = dateRange(p.start, p.end);
+  if(!state.notes) state.notes = {};
+  datesToRemove.forEach(d=>{
+    Object.keys(state.schedule).forEach(k=>{
+      if(k.startsWith(d+':')) delete state.schedule[k];
+    });
+    Object.keys(state.notes).forEach(k=>{
+      if(k.startsWith(d+':')) delete state.notes[k];
+    });
+  });
+  saveToFirebase();
+  ['period-sel','brief-period-sel','sum-period-sel'].forEach(id=>{
+    const s=document.getElementById(id); if(!s) return;
+    s.innerHTML = state.periods.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
+    s.value = '0';
+  });
+  renderSchedule();
+  toast('Deleted: '+p.label);
+};
+
+window.resetAll = function(){
+  if(!confirm('⚠ This will WIPE all schedule data and reset to the default July 2026 period. Continue?')) return;
+  if(!confirm('Are you ABSOLUTELY sure? This cannot be undone.')) return;
+  state = {
+    employees: state.employees || [
+      {name:"Ala'a Janbak",email:""},{name:"Mohammed Hinti",email:""},
+      {name:"Bashar Al-zubi",email:""},{name:"Ghadeer AbuRashed",email:""},
+      {name:"Ahmad Shwayat",email:""},{name:"Ahmad Abu Ghazaleh",email:""},
+      {name:"Momen Kamal",email:""},{name:"Ahmad Abu Slayeh",email:""},
+      {name:"Ismail Qashoue",email:""},{name:"Ahmad Fares",email:""},
+      {name:"Murad Saadeh",email:""}
+    ],
+    schedule: {},
+    notes: {},
+    periods: [makeMonthPeriod(2026, 6)] // July 2026
+  };
+  saveToFirebase();
+  ['period-sel','brief-period-sel','sum-period-sel'].forEach(id=>{
+    const s=document.getElementById(id); if(!s) return;
+    s.innerHTML = state.periods.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
+    s.value = '0';
+  });
+  renderNames();
+  renderSchedule();
+  toast('Reset complete. Fresh July 2026 period created.');
+};
+
+// ── Names ────────────────────────────────────────────────────────────────────
+function renderNames(){
+  const tbody = document.getElementById('names-tbody');
+  const head = tbody?.previousElementSibling;
+  if(head && head.tagName === 'THEAD'){
+    head.innerHTML = '<tr><th style="width:36px">#</th><th class="name-hd">Name</th><th class="name-hd">Email</th><th class="name-hd">Login &amp; role</th><th style="width:90px">Actions</th></tr>';
+  }
+  const roles = OPS.roles || {};
+  tbody.innerHTML = state.employees.map((emp,i) => {
+    const name = empName(emp);
+    const email = empEmail(emp);
+    const emailDisplay = email
+      ? `<span style="font-size:.75rem;color:var(--text)">${esc(email)}</span>`
+      : `<span style="font-size:.72rem;color:#DC2626;font-style:italic">missing</span>`;
+    let login;
+    if(emp.uid && roles[emp.uid]){
+      login = `<select onchange="setRole(${i},this.value)" style="font-size:.75rem;padding:3px 6px">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${roles[emp.uid]===k?' selected':''}>${v}</option>`).join('')}<option value="__none">Remove access</option></select>
+        <button class="btn btn-sm" title="Send password reset email" onclick="sendReset(${i})">&#128231;</button>`;
+    } else if(email){
+      login = `<button class="btn btn-sm btn-primary" onclick="createLogin(${i})">Create login</button>`;
+    } else login = `<span style="font-size:.72rem;color:var(--muted)">add email first</span>`;
+    return `<tr>
+      <td style="text-align:center;color:var(--muted)">${i+1}</td>
+      <td>${esc(name)}${emp.uid===ME?.uid?' <span style="font-size:.7rem;color:var(--muted)">(you)</span>':''}</td>
+      <td>${emailDisplay}</td>
+      <td>${login}</td>
+      <td style="text-align:center">
+        <button class="btn btn-sm" onclick="editEmp(${i})">&#9999;&#65039;</button>
+        <button class="btn btn-sm btn-danger" onclick="delEmp(${i})">&#128465;</button>
+      </td>
+    </tr>`;
+  }).join('');
+  // People who signed in themselves but have no role yet
+  const pend = Object.entries(pendingUsers).filter(([uid])=>!roles[uid]);
+  document.getElementById('pending-card').style.display = pend.length ? '' : 'none';
+  document.getElementById('pending-body').innerHTML = pend.map(([uid,p])=>{
+    const ei = state.employees.findIndex(e=>empEmail(e).toLowerCase()===String(p.email||'').toLowerCase());
+    return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--border)">
+      <b style="font-size:.85rem">${esc(p.email)}</b>
+      <span style="font-size:.75rem;color:${ei>=0?'#16A34A':'#B45309'}">${ei>=0?'matches '+esc(empName(state.employees[ei])):'not in the staff list — add them above with this email'}</span>
+      <select id="pr-${uid}" style="font-size:.78rem;padding:3px 6px;margin-left:auto">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select>
+      <button class="btn btn-sm btn-primary" onclick="approvePending('${uid}',${ei})">Give access</button>
+      <button class="btn btn-sm btn-danger" onclick="dismissPending('${uid}')">Dismiss</button></div>`;
+  }).join('');
+}
+window.createLogin = async function(i){
+  const emp = state.employees[i], email = empEmail(emp);
+  const role = prompt(`Create a login for ${empName(emp)} (${email}).\n\nRole — type: junior, senior or admin`, 'junior');
+  if(!role) return;
+  const r = role.trim().toLowerCase();
+  if(!ROLES[r]){ toast('Role must be junior, senior or admin', true); return; }
+  try{
+    toast('Creating account…');
+    const uid = await createStaffLogin(email);
+    await set(ref(db,'roles/'+uid), r);
+    state.employees[i] = {...emp, uid};
+    saveToFirebase();
+    renderNames();
+    toast(`&#10003; Login created — ${empName(emp)} got an email to set their password`);
+  }catch(e){
+    if(e.code==='auth/email-already-in-use') alert(`${email} already has an account.\n\nAsk ${empName(emp)} to sign in once — they will then appear under "Signed in but waiting for access" below, where you can give them a role.`);
+    else alert('Could not create the login: '+(e.code||e.message));
+  }
+};
+window.setRole = async function(i, r){
+  const emp = state.employees[i];
+  if(emp.uid===ME.uid && r!=='admin' && !confirm('Change your OWN role? You will lose access to this admin panel.')) { renderNames(); return; }
+  if(r==='__none'){
+    if(!confirm(`Remove ${empName(emp)}'s access? Their account stays but they can't see anything.`)){ renderNames(); return; }
+    await remove(ref(db,'roles/'+emp.uid));
+  } else await set(ref(db,'roles/'+emp.uid), r);
+  toast('Role updated');
+};
+window.sendReset = async function(i){
+  const email = empEmail(state.employees[i]);
+  try{ await resetPassword(email); toast('Password email sent to '+email); }catch(e){ toast('Could not send: '+(e.code||e.message), true); }
+};
+window.approvePending = async function(uid, ei){
+  const r = document.getElementById('pr-'+uid).value;
+  await set(ref(db,'roles/'+uid), r);
+  await remove(ref(db,'pending/'+uid));
+  if(ei>=0){ state.employees[ei] = {...state.employees[ei], uid}; saveToFirebase(); }
+  toast('Access given');
+};
+window.dismissPending = async function(uid){ await remove(ref(db,'pending/'+uid)); };
+window.openAddEmp = function(){showModal(`<h3 style="margin-bottom:1rem;font-size:1rem">Add employee</h3>
+  <input type="text" id="f-name" placeholder="Full name" style="width:100%;margin-bottom:.5rem">
+  <input type="email" id="f-email" placeholder="Email address" style="width:100%;margin-bottom:1rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveEmp()">Add</button></div>`);};
+window.editEmp = function(i){
+  const emp = state.employees[i];
+  const name = empName(emp);
+  const email = empEmail(emp);
+  showModal(`<h3 style="margin-bottom:1rem;font-size:1rem">Edit employee</h3>
+  <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:2px">Name</label>
+  <input type="text" id="f-name" value="${name.replace(/"/g,'&quot;')}" style="width:100%;margin-bottom:.75rem">
+  <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:2px">Email</label>
+  <input type="email" id="f-email" value="${email.replace(/"/g,'&quot;')}" placeholder="name@example.com" style="width:100%;margin-bottom:1rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit">
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveEmp(${i})">Save</button></div>`);
+};
+window.saveEmp = function(i){
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  if(!name) return;
+  if(i !== undefined){
+    state.employees[i] = {...state.employees[i], name, email};
+  } else {
+    state.employees.push({name, email});
+  }
+  saveToFirebase();
+  closeModal();
+  renderNames();
+};
+window.delEmp = function(i){
+  const name = empName(state.employees[i]);
+  if(!confirm(`Remove "${name}"?`)) return;
+  state.employees.splice(i, 1);
+  saveToFirebase();
+  renderNames();
+};
+
+// ── Schedule ─────────────────────────────────────────────────────────────────
+function renderSchedule(){
+  const p=curPeriod('period-sel');
+  const dates=dateRange(p.start,p.end);
+  const weeks=toWeeks(dates);
+  const N=state.employees.length;
+  document.getElementById('sched-legend').innerHTML=Object.entries(LOC_STYLE).map(([loc,{bg,fg}])=>
+    `<div class="leg"><div class="leg-dot" style="background:${bg};border:1px solid ${fg}40"></div>${loc}</div>`).join('');
+  let hdr1='<tr><th class="name-hd" rowspan="2" style="position:sticky;left:0;z-index:20;min-width:140px">Employee</th>';
+  weeks.forEach((wk,wi)=>{
+    hdr1+=`<th colspan="${wk.length}" style="background:#2d3a55">${parseDate(wk[0]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${parseDate(wk[wk.length-1]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</th>`;
+    hdr1+=`<th rowspan="2" style="background:#444;width:34px;font-size:.7rem">W${wi+1}</th>`;
+  });
+  hdr1+='</tr><tr>';
+  weeks.forEach(wk=>wk.forEach(d=>{
+    hdr1+=`<th style="background:var(--navy);color:#fff;font-size:.72rem;min-width:50px">${dayNum(d)}<br>${dowName(d)}</th>`;
+  }));
+  hdr1+='</tr>';
+  let tbody='';
+  for(let ei=0;ei<N;ei++){
+    tbody+=`<tr><td class="name-cell">${empName(state.employees[ei])}</td>`;
+    weeks.forEach((wk,wi)=>{
+      let wkN=0;
+      wk.forEach(d=>{
+        const a=getAssign(d,ei);const s=LOC_STYLE[a]||LOC_STYLE["Day Off"];
+        if(a!=='Day Off')wkN++;
+        const note = getNote(d, ei);
+        const noteIcon = note
+          ? `<span onclick="editNote('${d}',${ei})" title="${note.replace(/"/g,'&quot;')}" style="position:absolute;bottom:1px;left:2px;right:2px;font-size:.62rem;cursor:pointer;background:#F0B429;color:#5A3800;border-radius:3px;padding:1px 4px;font-weight:600;line-height:1.15;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📌 ${note.slice(0,12)}${note.length>12?'…':''}</span>`
+          : `<span onclick="editNote('${d}',${ei})" title="Click to add note" style="position:absolute;bottom:1px;left:2px;font-size:.62rem;cursor:pointer;color:${s.fg};opacity:.5;padding:0 3px;background:rgba(255,255,255,.6);border-radius:3px;font-weight:600">+ note</span>`;
+        tbody+=`<td style="padding:2px 2px 14px 2px;background:${s.bg};position:relative;min-width:75px">${noteIcon}<select class="cell-sel" style="background:${s.bg};color:${s.fg}" onchange="onCell(this,'${d}',${ei})">
+          ${LOCS.map(l=>`<option value="${l}"${a===l?' selected':''}>${l}</option>`).join('')}</select></td>`;
+      });
+      const over=wkN>6;
+      tbody+=`<td style="text-align:center;font-weight:700;font-size:.85rem;background:${over?'var(--red-bg)':'var(--grn-bg)'};color:${over?'var(--red-fg)':'var(--grn-fg)'}">${wkN}</td>`;
+    });
+    tbody+='</tr>';
+  }
+  document.getElementById('sched-wrap').innerHTML=`<table><thead>${hdr1}</thead><tbody>${tbody}</tbody></table>`;
+  populateBulkPanel();
+}
+window.onCell = function(sel,date,ei){
+  const val=sel.value;
+  const p=curPeriod('period-sel');
+  const weeks=toWeeks(dateRange(p.start,p.end));
+  setAssign(date,ei,val);
+  const s=LOC_STYLE[val]||LOC_STYLE["Day Off"];
+  sel.style.background=s.bg;sel.style.color=s.fg;sel.parentElement.style.background=s.bg;
+  const wk=weeks.find(w=>w.includes(date))||[];
+  const c=getWeekDays(ei,wk);
+  if(c>6)toast(`&#9888; ${empName(state.employees[ei])}: ${c} days this week — over limit!`,true);
+  renderSchedule();
+};
+
+// ── Brief ────────────────────────────────────────────────────────────────────
+function renderBrief(){
+  const p=curPeriod('brief-period-sel');
+  const dates=dateRange(p.start,p.end);
+  const weeks=toWeeks(dates);
+  const N=state.employees.length;
+  const TRACK=["KHBP","AYC Morning","AYC Night","Mobile Lab","Outreach"];
+  let issues=0;
+  let html='';
+  weeks.forEach((wk,wi)=>{
+    html+=`<div style="margin-bottom:1.5rem"><h3 style="font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em">Week ${wi+1} &middot; ${parseDate(wk[0]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${parseDate(wk[wk.length-1]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</h3><div class="brief-grid">`;
+    wk.forEach(d=>{
+      html+=`<div class="brief-day-card"><div class="brief-day-hd">${parseDate(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}<br>${dowName(d)}</div>`;
+      let tot=0;
+      TRACK.forEach(loc=>{
+        const cnt=state.employees.filter((_,ei)=>getAssign(d,ei)===loc).length;
+        const min=MIN_STAFF[loc]||0;const ok=!min||cnt>=min;
+        if(!ok)issues++;
+        if(cnt>0||min>0){
+          html+=`<div class="brief-loc-row ${ok?'ok':'warn'}">
+            <span style="font-size:.68rem">${loc.replace(' Morning',' AM').replace(' Night',' PM').replace('Mobile Lab','Mob.')}</span>
+            <span class="brief-count">${cnt}${min?'/'+min:''}</span></div>`;
+          tot+=cnt;
+        }
+      });
+      html+=`<div class="brief-loc-row" style="border-top:2px solid var(--border);background:#f9f9f9"><span style="font-size:.68rem;font-weight:600">Total</span><span class="brief-count">${tot}</span></div>`;
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('brief-metrics').innerHTML=`
+    <div class="metric"><div class="metric-val" style="color:${issues>0?'#DC2626':'#16A34A'}">${issues}</div><div class="metric-lbl">Staffing issues</div></div>
+    <div class="metric"><div class="metric-val">${dates.length}</div><div class="metric-lbl">Days in period</div></div>
+    <div class="metric"><div class="metric-val">${state.employees.length}</div><div class="metric-lbl">Employees</div></div>`;
+  document.getElementById('brief-content').innerHTML=html;
+}
+
+// ── Summary ──────────────────────────────────────────────────────────────────
+function renderSummary(){
+  const p=curPeriod('sum-period-sel');
+  const dates=dateRange(p.start,p.end);
+  const weeks=toWeeks(dates);
+  const N=state.employees.length;
+  let html=`<div style="overflow-x:auto"><table><thead><tr>
+    <th class="name-hd" style="position:sticky;left:0;background:var(--navy)">Employee</th>
+    ${weeks.map((wk,wi)=>`<th>W${wi+1}<br><span style="font-weight:400;font-size:.68rem">${parseDate(wk[0]).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span></th>`).join('')}
+    <th>Total</th></tr></thead><tbody>`;
+  for(let ei=0;ei<N;ei++){
+    let tot=0;
+    const cells=weeks.map(wk=>{const c=getWeekDays(ei,wk);tot+=c;const over=c>6;
+      return `<td style="text-align:center;font-weight:700;background:${over?'var(--red-bg)':c>0?'var(--grn-bg)':'var(--off-bg)'};color:${over?'var(--red-fg)':c>0?'var(--grn-fg)':'var(--off-fg)'}">${c}${over?' &#9888;':''}</td>`;
+    }).join('');
+    html+=`<tr><td class="name-cell" style="position:sticky;left:0">${empName(state.employees[ei])}</td>${cells}<td style="text-align:center;font-weight:700">${tot}</td></tr>`;
+  }
+  html+='</tbody></table></div>';
+  document.getElementById('summary-content').innerHTML=html;
+}
+
+// ── Modal / Toast ─────────────────────────────────────────────────────────────
+window.showModal = function(html){document.getElementById('modal-root').innerHTML=`<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9000" onclick="if(event.target===this)closeModal()"><div style="background:#fff;border-radius:12px;padding:1.5rem;width:340px;max-width:95vw">${html}</div></div>`;};
+window.closeModal = function(){document.getElementById('modal-root').innerHTML='';};
+let _tt;
+window.toast = function(msg,warn=false){const t=document.getElementById('toast');t.innerHTML=msg;t.className='toast show'+(warn?' warn':'');clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',4000);};
+
+
+window.editNote = function(date, ei){
+  const currentNote = getNote(date, ei);
+  const empN = empName(state.employees[ei]);
+  const dateLabel = new Date(date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  showModal(`<h3 style="margin-bottom:.5rem;font-size:1rem">Note for ${empN}</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">${dateLabel}</p>
+    <input type="text" id="f-note" value="${currentNote.replace(/"/g,'&quot;')}" placeholder="e.g. Robotics workshop 3-5pm" style="width:100%;margin-bottom:1rem;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit" onkeydown="if(event.key==='Enter')saveNoteFromModal('${date}',${ei})">
+    <p style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem">Leave empty to remove the note.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNoteFromModal('${date}',${ei})">Save note</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('f-note')?.focus(), 50);
+};
+window.saveNoteFromModal = function(date, ei){
+  const val = document.getElementById('f-note').value;
+  setNote(date, ei, val);
+  closeModal();
+  renderSchedule();
+};
+
+window.notifyStaff = async function(){
+  // 1. Check EmailJS is configured
+  if(!emailReady()){
+    alert('EmailJS is not configured yet.\n\nTo enable email notifications:\n1. Sign up free at emailjs.com\n2. Create an Email Service and Template\n3. Fill in EMAILJS_CONFIG in common.js (including siteUrl)');
+    return;
+  }
+
+  // 2. Confirm employees have emails
+  normalizeEmployees();
+  const withEmail = state.employees.filter(e => empEmail(e));
+  const missing = state.employees.filter(e => !empEmail(e));
+  if(withEmail.length === 0){
+    alert('No employees have email addresses set. Add emails in the Names tab first.');
+    return;
+  }
+
+  // 3. Confirm send
+  let msg = `Send notification email to ${withEmail.length} employee(s)?`;
+  if(missing.length > 0){
+    msg += `\n\nSkipping ${missing.length} employee(s) with no email set:\n${missing.map(e => '• '+empName(e)).join('\n')}`;
+  }
+  if(!confirm(msg)) return;
+
+  // 4. Send one email per employee
+  const p = curPeriod('period-sel');
+  const monthLabel = p?.label || 'the schedule';
+  const scheduleUrl = EMAILJS_CONFIG.siteUrl + 'staff.html';
+  let sent = 0, failed = 0;
+  const failedNames = [];
+  toast(`Sending ${withEmail.length} email(s)...`);
+
+  for(const emp of withEmail){
+    try {
+      await sendEmail(
+        EMAILJS_CONFIG.templateId,
+        {
+          to_name:       empName(emp),
+          to_email:      empEmail(emp),
+          month_label:   monthLabel,
+          schedule_link: scheduleUrl,
+          admin_message: 'The staff rotation schedule has been updated. Please review your assignments.'
+        }
+      );
+      sent++;
+    } catch(err){
+      failed++;
+      failedNames.push(empName(emp));
+      console.error('Email failed for', empName(emp), err);
+    }
+  }
+  if(failed === 0){
+    toast(`&#10003; Sent ${sent} email(s) successfully.`);
+  } else {
+    toast(`&#9888; Sent ${sent}, failed ${failed}: ${failedNames.join(', ')}`, true);
+  }
+};
+
+window.bulkApply = function(){
+  const empSel = document.getElementById('bulk-emp');
+  const locSel = document.getElementById('bulk-loc');
+  const fromInp = document.getElementById('bulk-from');
+  const toInp = document.getElementById('bulk-to');
+  const status = document.getElementById('bulk-status');
+  const empIdx = empSel.value; // '' = all
+  const loc = locSel.value;
+  const fromDate = fromInp.value;
+  const toDate = toInp.value;
+  if(!loc || !fromDate || !toDate){
+    status.textContent = 'Please pick location and both dates';
+    status.style.color = '#DC2626';
+    return;
+  }
+  if(fromDate > toDate){
+    status.textContent = 'From date is after To date';
+    status.style.color = '#DC2626';
+    return;
+  }
+  // Collect skip-days (0=Sun, 1=Mon, ..., 6=Sat)
+  const skipDays = Array.from(document.querySelectorAll('.bulk-skip:checked')).map(el => parseInt(el.value));
+  const dates = dateRange(fromDate, toDate);
+  const targets = empIdx === '' ? state.employees.map((_,i)=>i) : [parseInt(empIdx)];
+  let count = 0, skipped = 0;
+  dates.forEach(d => {
+    const dow = parseDate(d).getDay();
+    if(skipDays.includes(dow)){ skipped += targets.length; return; }
+    targets.forEach(ei => {
+      state.schedule[`${d}:${ei}`] = loc;
+      count++;
+    });
+  });
+  saveToFirebase();
+  const skipMsg = skipped > 0 ? ` (skipped ${skipped})` : '';
+  status.textContent = `✓ Applied to ${count} cell(s)${skipMsg}`;
+  status.style.color = '#16A34A';
+  renderSchedule();
+  setTimeout(()=>{ status.textContent = ''; }, 4000);
+};
+
+function populateBulkPanel(){
+  const empSel = document.getElementById('bulk-emp');
+  const locSel = document.getElementById('bulk-loc');
+  if(!empSel || !locSel) return;
+  const curEmp = empSel.value;
+  const curLoc = locSel.value;
+  empSel.innerHTML = '<option value="">-- All employees --</option>' +
+    state.employees.map((e,i)=>`<option value="${i}">${empName(e)}</option>`).join('');
+  locSel.innerHTML = LOCS.map(l => `<option value="${l}">${l}</option>`).join('');
+  if(curEmp) empSel.value = curEmp;
+  if(curLoc) locSel.value = curLoc;
+  // Default date range = current period
+  const p = curPeriod('period-sel');
+  const fromInp = document.getElementById('bulk-from');
+  const toInp = document.getElementById('bulk-to');
+  if(fromInp && !fromInp.value) fromInp.value = p.start;
+  if(toInp && !toInp.value) toInp.value = p.end;
+}
+
+// Expose render functions globally so inline onchange handlers can call them
+window.renderSchedule = renderSchedule;
+window.renderBrief = renderBrief;
+window.renderSummary = renderSummary;
+window.renderNames = renderNames;
+
+</script>
+</body>
+</html>
